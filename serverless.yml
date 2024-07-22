@@ -4,7 +4,7 @@ useDotenv: true
 
 plugins:
   - serverless-webpack
-  - serverless-dynamodb-local
+  - serverless-dynamodb
   - serverless-offline
   - serverless-api-gateway-throttling
 provider:
@@ -133,7 +133,7 @@ custom:
   resourcesTableName: ${self:custom.stage}-lockbot-resources
   installationsTableName: ${self:custom.stage}-lockbot-installations
   accessTokensTableName: ${self:custom.stage}-lockbot-tokens
-  dynamodb:
+  serverless-dynamodb:
     stages:
       - dev # https://bit.ly/35WR0TT
   apiGatewayThrottling:
