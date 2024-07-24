@@ -9,13 +9,14 @@ plugins:
   - serverless-api-gateway-throttling
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs16.x
   lambdaHashingVersion: 20201221
   environment:
     SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
     SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
     SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
     STATE_SECRET: ${env:STATE_SECRET}
+    LOCK_REMINDER_THRESHOLD_MINUTES: ${env:LOCK_REMINDER_THRESHOLD_MINUTES}
     RESOURCES_TABLE_NAME: ${self:custom.resourcesTableName}
     INSTALLATIONS_TABLE_NAME: ${self:custom.installationsTableName}
     ACCESS_TOKENS_TABLE_NAME: ${self:custom.accessTokensTableName}
@@ -80,6 +81,10 @@ functions:
       - http:
           method: get
           path: /api-docs/openapi.json
+  reminder:
+    handler: src/handlers/reminder/index.handler
+    events:
+      - schedule: rate(${self:custom.lockReminderCheckIntervalMinutes.${self:custom.stage}, self:custom.lockReminderCheckIntervalMinutes.default} minutes)
 
 resources:
   Resources:
@@ -139,3 +144,6 @@ custom:
   apiGatewayThrottling:
     maxRequestsPerSecond: 200
     maxConcurrentRequests: 100
+  lockReminderCheckIntervalMinutes:
+    dev: 2
+    default: 30
