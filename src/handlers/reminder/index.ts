@@ -34,9 +34,9 @@ export const handler: EventBridgeHandler<any, string, void> = async (
     env.get("LOCK_REMINDER_THRESHOLD_MINUTES").asIntPositive() ??
     defaultReminderThresholdMinutes;
 
-  console.log(`event:\n${JSON.stringify(event, null, 2)}`);
-  console.log(`context:\n${JSON.stringify(context, null, 2)}`);
-  console.log(`reminderThresholdMinutes: ${reminderThresholdMinutes}`);
+  console.log("event:", { event });
+  console.log("context:", { context });
+  console.log("reminderThresholdMinutes:", { reminderThresholdMinutes });
 
   await sendReminders(reminderThresholdMinutes);
 };

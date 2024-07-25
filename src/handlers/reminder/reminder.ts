@@ -1,4 +1,34 @@
+import * as env from "env-var";
+import { WebClient, ErrorCode } from "@slack/web-api";
 import { lockRepo } from "../api/infra";
+import { Lock } from "../../lock-bot";
+
+// TODO: Read this from `installations` table?
+const botOauthToken = env.get("BOT_OAUTH_TOKEN").required().asString();
+
+const slack = new WebClient(botOauthToken);
+
+async function sendReminderMessage(lock: Lock) {
+  console.log("Sending reminder", { lock });
+  try {
+    await slack.chat.postEphemeral({
+      text: `You've had a lock on \`${lock.name}\` for a while now. Please remember to release it when you're done.`,
+      channel: lock.channel,
+      user: lock.owner,
+    });
+  } catch (error: any) {
+    if (
+      error.code === ErrorCode.HTTPError ||
+      error.code === ErrorCode.PlatformError ||
+      error.code === ErrorCode.RequestError ||
+      error.code === ErrorCode.RateLimitedError
+    ) {
+      console.warn("Failed to send reminder", { lock });
+    } else {
+      console.warn("An unknown error occurred", { error });
+    }
+  }
+}
 
 const sendReminders = async (
   reminderThresholdMinutes: number
@@ -7,19 +37,16 @@ const sendReminders = async (
   const dateThreshold = new Date(
     Date.now() - reminderThresholdMinutes * millisecondsPerMinute
   );
-  console.log(`dateThreshold: ${dateThreshold}`);
+  console.log("dateThreshold:", { dateThreshold });
   const locks = await lockRepo.getAllGlobal();
-  locks?.forEach((lock) => {
-    console.log(
-      `Lock: ${lock.name} | Owner: ${lock.owner} | Created: ${lock.created}`
-    );
-    if (lock.created < dateThreshold) {
-      // TODO: Send private Slack message to lock owner
-      console.log(
-        `Sending reminder to '${lock.owner}' for lock '${lock.name}' created at ${lock.created}`
-      );
-    }
-  });
+  await Promise.all(
+    locks.map(async (lock) => {
+      console.log("Checking lock:", { lock });
+      if (lock.created < dateThreshold) {
+        await sendReminderMessage(lock);
+      }
+    })
+  );
 };
 
 export default sendReminders;
