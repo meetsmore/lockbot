@@ -84,7 +84,8 @@ functions:
   reminder:
     handler: src/handlers/reminder/index.handler
     events:
-      - schedule: rate(${self:custom.lockReminderCheckIntervalMinutes.${self:custom.stage}, self:custom.lockReminderCheckIntervalMinutes.default} minutes)
+      - schedule:
+          rate: ${self:custom.lockReminderScheduleExpression.${self:custom.stage}, self:custom.lockReminderScheduleExpression.default}
 
 resources:
   Resources:
@@ -144,6 +145,8 @@ custom:
   apiGatewayThrottling:
     maxRequestsPerSecond: 200
     maxConcurrentRequests: 100
-  lockReminderCheckIntervalMinutes:
-    dev: 2
-    default: 30
+  lockReminderScheduleExpression:
+    dev: rate(1 minute)
+    default:
+      - cron(30 1 ? * MON-FRI *)
+      - cron(30 5 ? * MON-FRI *)
