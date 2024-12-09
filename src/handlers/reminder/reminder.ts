@@ -23,9 +23,9 @@ async function sendReminderMessage(lock: Lock) {
       error.code === ErrorCode.RequestError ||
       error.code === ErrorCode.RateLimitedError
     ) {
-      console.warn("Failed to send reminder", { lock });
+      console.error("Failed to send reminder", { lock, error });
     } else {
-      console.warn("An unknown error occurred", { error });
+      console.error("An unexpected error occurred", { lock, error });
     }
   }
 }
